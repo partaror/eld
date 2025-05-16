@@ -118,6 +118,7 @@ void ELFDynamic::reserveOne(uint64_t pTag) {
   // llvm::errs() << "R : " << TagToString(pTag) << "\n";;
   assert(nullptr != m_pEntryFactory);
   m_EntryList.push_back(m_pEntryFactory->clone());
+  return m_EntryList.back();
 }
 
 void ELFDynamic::applyOne(uint64_t pTag, uint64_t pValue) {
@@ -128,10 +129,13 @@ void ELFDynamic::applyOne(uint64_t pTag, uint64_t pValue) {
 }
 
 /// reserveEntries - reserve entries
-void ELFDynamic::reserveEntries(const ELFFileFormat &pFormat, Module &pModule) {
+void ELFDynamic::reserveEntries(ELFFileFormat &pFormat, Module &pModule) {
   if (LinkerConfig::DynObj == m_Config.codeGenType()) {
-    if (pModule.getSection(".dynstr") && !m_Config.options().soname().empty())
+    // DT_SONAME is the 0th entry in the dynamic section.
+    if (pModule.getSection(".dynstr") && !m_Config.options().soname().empty()) {
       reserveOne(llvm::ELF::DT_SONAME); // DT_SONAME
+      applySoname(pFormat.addStringToDynStrTab(m_Config.options().soname()));
+    }
 
     if (m_Config.options().bsymbolic())
       reserveOne(llvm::ELF::DT_SYMBOLIC); // DT_SYMBOLIC
@@ -403,8 +407,9 @@ void ELFDynamic::applyEntries(const ELFFileFormat &pFormat,
 size_t ELFDynamic::symbolSize() const { return m_pEntryFactory->symbolSize(); }
 
 /// reserveNeedEntry - reserve on DT_NEED entry.
-void ELFDynamic::reserveNeedEntry() {
+elf_dynamic::EntryIF * ELFDynamic::reserveNeedEntry() {
   m_NeedList.push_back(m_pEntryFactory->clone());
+  return m_NeedList.back();
 }
 
 /// emit

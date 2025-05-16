@@ -140,10 +140,10 @@ public:
   size_t numOfBytes() const;
 
   /// reserveEntries - reserve entries
-  void reserveEntries(const ELFFileFormat &pFormat, Module &pModule);
+  void reserveEntries(ELFFileFormat &pFormat, Module &pModule);
 
   /// reserveNeedEntry - reserve on DT_NEED entry.
-  void reserveNeedEntry();
+  elf_dynamic::EntryIF *reserveNeedEntry();
 
   /// applyEntries - apply entries
   void applyEntries(const ELFFileFormat &pFormat, const Module &pModule);
